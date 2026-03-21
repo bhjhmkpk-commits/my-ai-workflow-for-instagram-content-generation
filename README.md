@@ -117,3 +117,30 @@ Optional:
 - `GOOGLE_TRENDS_GEO`
 - `CONTENT_TONE`
 - `CONTENT_STYLE`
+
+## GitHub Actions deployment
+
+`.github/workflows/post-reels.yml` runs twice a day on GitHub Actions at:
+
+- `03:30 UTC` (`09:00 IST`)
+- `15:30 UTC` (`21:00 IST`)
+
+It also supports manual runs with `workflow_dispatch`.
+
+Set these GitHub repository secrets:
+
+- `JSON2VIDEO_API_KEY`
+- `GOOGLE_API_KEY`
+- `CLOUDINARY_URL`
+- `INSTAGRAM_ACCESS_TOKEN`
+- `INSTAGRAM_IG_USER_ID`
+- optional `JSON2VIDEO_AUDIO_URL`
+
+Optional repository variables:
+
+- `GOOGLE_TRENDS_GEO`
+- `CONTENT_TONE`
+- `CONTENT_STYLE`
+- `JSON2VIDEO_IMAGE_MODEL`
+- `JSON2VIDEO_QUALITY`
+- `JSON2VIDEO_FONT_FAMILY`

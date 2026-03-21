@@ -1,0 +1,57 @@
+name: Post Instagram Reels
+
+on:
+  schedule:
+    - cron: "30 3 * * *"
+    - cron: "30 15 * * *"
+  workflow_dispatch:
+
+jobs:
+  post-reel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SHORTGEN_DISABLE_TTS: "true"
+      JSON2VIDEO_API_KEY: ${{ secrets.JSON2VIDEO_API_KEY }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
+      INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+      INSTAGRAM_IG_USER_ID: ${{ secrets.INSTAGRAM_IG_USER_ID }}
+      JSON2VIDEO_AUDIO_URL: ${{ secrets.JSON2VIDEO_AUDIO_URL }}
+      GOOGLE_TRENDS_GEO: ${{ vars.GOOGLE_TRENDS_GEO || 'US' }}
+      CONTENT_TONE: ${{ vars.CONTENT_TONE || 'sarcastic robotic' }}
+      CONTENT_STYLE: ${{ vars.CONTENT_STYLE || 'absurd ai-generated scenes, cinematic, vertical, meme-friendly' }}
+      JSON2VIDEO_IMAGE_MODEL: ${{ vars.JSON2VIDEO_IMAGE_MODEL || 'freepik-classic' }}
+      JSON2VIDEO_QUALITY: ${{ vars.JSON2VIDEO_QUALITY || 'medium' }}
+      JSON2VIDEO_FONT_FAMILY: ${{ vars.JSON2VIDEO_FONT_FAMILY || 'Roboto' }}
+      INSTAGRAM_GRAPH_VERSION: ${{ vars.INSTAGRAM_GRAPH_VERSION || 'v23.0' }}
+      INSTAGRAM_SHARE_TO_FEED: ${{ vars.INSTAGRAM_SHARE_TO_FEED || 'true' }}
+      REEL_DURATION_SECONDS: ${{ vars.REEL_DURATION_SECONDS || '5' }}
+      REEL_WIDTH: ${{ vars.REEL_WIDTH || '1080' }}
+      REEL_HEIGHT: ${{ vars.REEL_HEIGHT || '1920' }}
+      REEL_FPS: ${{ vars.REEL_FPS || '30' }}
+      SHORTGEN_OUTPUT_DIR: ./output
+      TOPIC_HISTORY_FILE: ./output/topic-history.txt
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Run generator
+        run: |
+          bash scripts/run_render_once.sh
