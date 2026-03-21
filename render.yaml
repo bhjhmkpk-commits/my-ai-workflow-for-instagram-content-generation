@@ -1,0 +1,25 @@
+services:
+  - type: cron
+    name: instagram-short-generator-morning
+    runtime: python
+    plan: starter
+    schedule: "30 3 * * *"
+    buildCommand: "pip install -e ."
+    startCommand: "bash scripts/run_render_once.sh"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.11"
+      - key: SHORTGEN_DISABLE_TTS
+        value: "true"
+  - type: cron
+    name: instagram-short-generator-evening
+    runtime: python
+    plan: starter
+    schedule: "30 15 * * *"
+    buildCommand: "pip install -e ."
+    startCommand: "bash scripts/run_render_once.sh"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.11"
+      - key: SHORTGEN_DISABLE_TTS
+        value: "true"
