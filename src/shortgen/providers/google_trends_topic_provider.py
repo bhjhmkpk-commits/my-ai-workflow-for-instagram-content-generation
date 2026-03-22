@@ -67,12 +67,20 @@ class GoogleTrendsTopicProvider:
         history = self._load_history()[-30:]
 
         prompt = (
-            "Create short Instagram Reel topic ideas for an AI meme page.\n"
-            "Use the trending search list as inspiration, but transform them into absurd, "
-            "sarcastic, robotic, AI-themed concepts.\n"
+            "Create short Instagram Reel topic ideas for a weird, highly shareable internet content page.\n"
+            "Use the trending search list as inspiration, but transform them into fresh, intuitive, "
+            "unexpected concepts across broad categories.\n"
             f"Need exactly {count} topics.\n"
             "Rules: one line per topic, 4 to 12 words, no numbering, no hashtags, "
             "no emojis, no quotes.\n"
+            "Vary the categories aggressively across entertainment, celebrity culture, sports, fashion, "
+            "food, travel, internet drama, productivity, dating, finance, nostalgia, tech, absurd comedy, "
+            "lifestyle, wellness, gaming, and weird everyday observations.\n"
+            "Do not make every topic about robots, AI, offices, or futuristic scenes.\n"
+            "Only use AI/robot themes occasionally when they fit naturally.\n"
+            "Mix formats like POV, confessions, mini-stories, reactions, hot takes, aesthetic moments, "
+            "cultural satire, and emotionally exaggerated situations.\n"
+            "Make the ideas feel random in a smart way, not repetitive.\n"
             "Avoid repeating or being too similar to the recent topic history.\n"
             f"Trending searches ({self.geo}): {', '.join(trends)}\n"
             f"Recent topic history: {', '.join(history) if history else 'none'}"

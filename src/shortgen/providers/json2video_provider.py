@@ -14,9 +14,13 @@ class Json2VideoProvider:
         self,
         api_key: str,
         base_url: str,
+        template_id: str,
         image_model: str,
         quality: str,
         font_family: str,
+        voice_model: str,
+        voice_id: str,
+        subtitles_model: str,
         audio_url: str,
         audio_volume: float,
     ) -> None:
@@ -24,11 +28,44 @@ class Json2VideoProvider:
             raise ValueError("JSON2VIDEO_API_KEY is required.")
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
+        self.template_id = template_id
         self.image_model = image_model
         self.quality = quality
         self.font_family = font_family
+        self.voice_model = voice_model
+        self.voice_id = voice_id
+        self.subtitles_model = subtitles_model
         self.audio_url = audio_url
         self.audio_volume = audio_volume
+
+    def _scene_payload(self, plan: ContentPlan) -> list[dict[str, str]]:
+        topic = plan.topic
+        scene_prompts = [
+            (
+                f"{topic}. wide cinematic establishing shot. immediate visual hook. "
+                "highly expressive subject. vertical 9:16. dynamic composition. no watermark."
+            ),
+            (
+                f"{topic}. tighter reaction shot focused on the most surprising detail. "
+                "strong emotion, visual escalation, dramatic contrast. vertical 9:16. no watermark."
+            ),
+            (
+                f"{topic}. payoff aftermath shot. strongest visual consequence of the situation. "
+                "memorable final frame, highly shareable, vertical 9:16. no watermark."
+            ),
+        ]
+        voice_lines = [
+            plan.hook,
+            plan.audio_prompt,
+            plan.cta,
+        ]
+        return [
+            {
+                "imagePrompt": image_prompt,
+                "voiceOverText": voice_text,
+            }
+            for image_prompt, voice_text in zip(scene_prompts, voice_lines, strict=True)
+        ]
 
     def _headers(self) -> dict[str, str]:
         return {
@@ -51,83 +88,21 @@ class Json2VideoProvider:
         )
 
     def build_movie(self, plan: ContentPlan) -> dict:
-        elements = [
-            {
-                "type": "image",
-                "model": self.image_model,
-                "prompt": plan.visual_prompt,
-                "aspect-ratio": "vertical",
-                "resize": "fill",
-                "duration": plan.duration_seconds,
-                "zoom": 3,
-                "pan": "bottom-right",
-                "cache": True,
-            },
-            {
-                "type": "text",
-                "text": plan.overlay_text,
-                "style": "001",
-                "duration": plan.duration_seconds,
-                "start": 0.15,
-                "width": 920,
-                "position": "custom",
-                "x": 80,
-                "y": 170,
-                "settings": {
-                    "font-family": self.font_family,
-                    "font-size": "60px",
-                    "font-weight": "700",
-                    "font-color": "#ffffff",
-                    "text-align": "center",
-                },
-            },
-            {
-                "type": "text",
-                "text": plan.cta,
-                "style": "001",
-                "duration": plan.duration_seconds,
-                "start": max(0, plan.duration_seconds - 1.8),
-                "width": 840,
-                "position": "custom",
-                "x": 120,
-                "y": 1660,
-                "settings": {
-                    "font-family": self.font_family,
-                    "font-size": "34px",
-                    "font-weight": "600",
-                    "font-color": "#f7f3e8",
-                    "text-align": "center",
-                },
-            },
-        ]
-
+        variables = {
+            "scenes": self._scene_payload(plan),
+            "voiceModel": self.voice_model,
+            "imageModel": self.image_model,
+            "subtitlesModel": self.subtitles_model,
+            "fontFamily": self.font_family,
+            "voiceID": self.voice_id,
+        }
         if self.audio_url:
-            elements.append(
-                {
-                    "type": "audio",
-                    "src": self.audio_url,
-                    "duration": -2,
-                    "loop": -1,
-                    "fade-in": 0.2,
-                    "fade-out": 0.4,
-                    "volume": self.audio_volume,
-                    "cache": True,
-                }
-            )
+            variables["audioURL"] = self.audio_url
 
         return {
-            "quality": self.quality,
-            "resolution": "custom",
-            "width": 1080,
-            "height": 1920,
+            "template": self.template_id,
             "comment": plan.topic,
-            "cache": True,
-            "scenes": [
-                {
-                    "duration": plan.duration_seconds,
-                    "elements": elements,
-                }
-            ],
+            "variables": variables,
         }
 
     def _create_movie(self, movie: dict) -> str:

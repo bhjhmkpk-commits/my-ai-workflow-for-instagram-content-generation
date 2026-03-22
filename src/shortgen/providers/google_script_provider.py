@@ -27,13 +27,27 @@ class GoogleScriptProvider:
             f"(HTTP {response.status_code}). Response: {details}"
         )
 
+    def _tone_for_topic(self, plan: ContentPlan) -> str:
+        caption_text = plan.caption.lower()
+        if "beep boop" in caption_text or any(
+            token in plan.topic.lower()
+            for token in ("ai", "robot", "android", "cyborg", "machine", "automation")
+        ):
+            return "meme-y, sharp, sarcastic, slightly robotic but still human-sounding"
+        return "meme-y, silly, human, culturally aware, funny, and specific to the topic"
+
     def generate(self, plan: ContentPlan) -> str:
         prompt = (
             "Write one short voiceover line for a 5-second Instagram Reel.\n"
             f"Topic: {plan.topic}\n"
-            f"Tone: sarcastic robotic\n"
+            f"Tone: {self._tone_for_topic(plan)}\n"
             f"Hook: {plan.hook}\n"
-            "Rules: 8 to 16 words, one sentence, no hashtags, no emojis, no quotes."
+            "Rules: 6 to 14 words, one sentence, no hashtags, no emojis, no quotes.\n"
+            "Make it sound like a human meme voiceover, not formal narration.\n"
+            "It can use casual filler or reaction sounds like wait, bro, nah, arre, uff, or oh no when natural.\n"
+            "Use the language or mixed-language internet phrasing that best fits the topic; do not force plain English.\n"
+            "Make it clearly about the topic itself, not a generic robot narrator.\n"
+            "Do not mention AI, robots, systems, or machines unless the topic is actually about that."
         )
         response = requests.post(
             f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent",

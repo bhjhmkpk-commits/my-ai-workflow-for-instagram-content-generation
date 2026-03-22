@@ -25,9 +25,13 @@ class Settings:
     default_topics: list[str]
     json2video_api_key: str
     json2video_base_url: str
+    json2video_template_id: str
     json2video_image_model: str
     json2video_quality: str
     json2video_font_family: str
+    json2video_voice_model: str
+    json2video_voice_id: str
+    json2video_subtitles_model: str
     json2video_audio_url: str
     json2video_audio_volume: float
     google_api_key: str
@@ -81,12 +85,25 @@ def load_settings() -> Settings:
             "JSON2VIDEO_BASE_URL",
             "https://api.json2video.com/v2",
         ).strip(),
+        json2video_template_id=os.getenv(
+            "JSON2VIDEO_TEMPLATE_ID",
+            "hdpPVeEfgB3G9RH3W8dL",
+        ).strip(),
         json2video_image_model=os.getenv(
             "JSON2VIDEO_IMAGE_MODEL",
             "freepik-classic",
         ).strip(),
         json2video_quality=os.getenv("JSON2VIDEO_QUALITY", "medium").strip(),
         json2video_font_family=os.getenv("JSON2VIDEO_FONT_FAMILY", "Roboto").strip(),
+        json2video_voice_model=os.getenv("JSON2VIDEO_VOICE_MODEL", "azure").strip(),
+        json2video_voice_id=os.getenv(
+            "JSON2VIDEO_VOICE_ID",
+            "en-US-EmmaMultilingualNeural",
+        ).strip(),
+        json2video_subtitles_model=os.getenv(
+            "JSON2VIDEO_SUBTITLES_MODEL",
+            "default",
+        ).strip(),
         json2video_audio_url=os.getenv("JSON2VIDEO_AUDIO_URL", "").strip(),
         json2video_audio_volume=float(os.getenv("JSON2VIDEO_AUDIO_VOLUME", "0.22")),
         google_api_key=os.getenv("GOOGLE_API_KEY", "").strip(),

@@ -7,14 +7,12 @@ from datetime import datetime
 import time
 
 from .config import Settings
-from .cloudinary import CloudinaryUploader
 from .instagram import InstagramPublisher
 from .media import normalize_reel
 from .models import ContentPlan, PublishResult
 from .planner import build_plan, slugify
 from .providers.google_script_provider import GoogleScriptProvider
 from .providers.google_trends_topic_provider import GoogleTrendsTopicProvider
-from .providers.nvidia_tts_provider import NvidiaTtsProvider
 from .providers.json2video_provider import Json2VideoProvider
 
 
@@ -54,27 +52,18 @@ class ShortGeneratorPipeline:
         video_provider = Json2VideoProvider(
             api_key=self.settings.json2video_api_key,
             base_url=self.settings.json2video_base_url,
+            template_id=self.settings.json2video_template_id,
             image_model=self.settings.json2video_image_model,
             quality=self.settings.json2video_quality,
             font_family=self.settings.json2video_font_family,
+            voice_model=self.settings.json2video_voice_model,
+            voice_id=self.settings.json2video_voice_id,
+            subtitles_model=self.settings.json2video_subtitles_model,
             audio_url=self.settings.json2video_audio_url,
             audio_volume=self.settings.json2video_audio_volume,
         )
-        uploader = CloudinaryUploader(self.settings.cloudinary_url)
-        tts_provider = None
-        if self.settings.nvidia_tts_script_path and not self.settings.shortgen_disable_tts:
-            tts_provider = NvidiaTtsProvider(
-                script_path=self.settings.nvidia_tts_script_path,
-                server=self.settings.nvidia_tts_server,
-                use_ssl=self.settings.nvidia_tts_use_ssl,
-                function_id=self.settings.nvidia_tts_function_id,
-                api_key=self.settings.nvidia_tts_api_key,
-                language_code=self.settings.nvidia_tts_language_code,
-                voice=self.settings.nvidia_tts_voice,
-            )
 
         movie_file = job_dir / "movie.json"
-        audio_file = job_dir / "audio.wav"
         raw_video = job_dir / "raw.mp4"
         reel_video = job_dir / "reel.mp4"
         plan_file = job_dir / "plan.json"
@@ -85,21 +74,10 @@ class ShortGeneratorPipeline:
 
         plan_file.write_text(json.dumps(plan.to_dict(), indent=2))
 
-        audio_url = self.settings.json2video_audio_url
-        if tts_provider:
-            try:
-                tts_provider.generate(plan, output_file=audio_file)
-                audio_url = uploader.upload_raw(
-                    audio_file,
-                    public_id=f"{job_dir.name}-audio",
-                )
-            except Exception as exc:
-                print(f"TTS skipped: {exc}")
-
         video_provider.generate(
             plan,
             movie_file=movie_file,
-            audio_url=audio_url,
+            audio_url=self.settings.json2video_audio_url,
             output_file=raw_video,
         )
         normalize_reel(
