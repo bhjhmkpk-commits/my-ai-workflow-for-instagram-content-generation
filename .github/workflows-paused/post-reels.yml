@@ -1,4 +1,4 @@
-name: Post Instagram Reels
+name: Post Instagram Reels (paused)
 
 on:
   workflow_dispatch:
