@@ -15,6 +15,15 @@ from .providers.google_script_provider import GoogleScriptProvider
 from .providers.google_trends_topic_provider import GoogleTrendsTopicProvider
 from .providers.json2video_provider import Json2VideoProvider
 
+FALLBACK_TOPICS = [
+    "coffee order with a plot twist",
+    "airport outfit causing unnecessary drama",
+    "group chat apology written like a press release",
+    "brunch arriving with championship energy",
+    "late-night overthinking dressed like luxury cinema",
+    "friend group acting like a prestige series",
+]
+
 
 class ShortGeneratorPipeline:
     def __init__(self, settings: Settings) -> None:
@@ -69,8 +78,11 @@ class ShortGeneratorPipeline:
         plan_file = job_dir / "plan.json"
 
         if script_provider:
-            generated_audio_prompt = script_provider.generate(plan)
-            plan = replace(plan, audio_prompt=generated_audio_prompt)
+            try:
+                generated_audio_prompt = script_provider.generate(plan)
+                plan = replace(plan, audio_prompt=generated_audio_prompt)
+            except Exception as exc:
+                print(f"Google script generation skipped: {exc}")
 
         plan_file.write_text(json.dumps(plan.to_dict(), indent=2))
 
@@ -122,7 +134,16 @@ class ShortGeneratorPipeline:
     def generate_topics(self, count: int) -> list[str]:
         provider = self.topic_provider()
         if provider:
-            return provider.generate_topics(count)
-        if not self.settings.default_topics:
-            raise ValueError("No default topics configured.")
-        return self.settings.default_topics[:count]
+            try:
+                return provider.generate_topics(count)
+            except Exception as exc:
+                print(f"Google topic generation skipped: {exc}")
+
+        topic_pool = self.settings.default_topics or FALLBACK_TOPICS
+        if count <= len(topic_pool):
+            return topic_pool[:count]
+
+        results: list[str] = []
+        while len(results) < count:
+            results.extend(topic_pool)
+        return results[:count]

@@ -2,6 +2,9 @@ name: Post Instagram Reels
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "30 3 * * *"
+    - cron: "30 15 * * *"
 
 jobs:
   post-reel:
@@ -9,6 +12,12 @@ jobs:
     timeout-minutes: 45
     env:
       SHORTGEN_DISABLE_TTS: "true"
+      JSON2VIDEO_API_KEY: ${{ secrets.JSON2VIDEO_API_KEY }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
+      INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+      INSTAGRAM_IG_USER_ID: ${{ secrets.INSTAGRAM_IG_USER_ID }}
+      JSON2VIDEO_AUDIO_URL: ${{ secrets.JSON2VIDEO_AUDIO_URL }}
       GOOGLE_TRENDS_GEO: ${{ vars.GOOGLE_TRENDS_GEO || 'US' }}
       CONTENT_TONE: ${{ vars.CONTENT_TONE || 'meme-y, expressive, highly shareable' }}
       CONTENT_STYLE: ${{ vars.CONTENT_STYLE || 'topic-led visual storytelling, cinematic, vertical, meme-friendly' }}
@@ -48,16 +57,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .
 
-      - name: Load repo env file
+      - name: Validate required secrets
         run: |
-          set -a
-          source .github/actions.env
-          set +a
-          while IFS='=' read -r key _; do
-            if [[ -n "${key}" && "${key}" != \#* ]]; then
-              echo "${key}=${!key}" >> "${GITHUB_ENV}"
+          missing=0
+          for key in JSON2VIDEO_API_KEY CLOUDINARY_URL INSTAGRAM_ACCESS_TOKEN INSTAGRAM_IG_USER_ID; do
+            if [[ -z "${!key}" ]]; then
+              echo "::error title=Missing secret::${key} is not configured"
+              missing=1
             fi
-          done < .github/actions.env
+          done
+          exit "${missing}"
 
       - name: Run generator
         run: |

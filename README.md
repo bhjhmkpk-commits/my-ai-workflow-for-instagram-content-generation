@@ -38,6 +38,12 @@ Set these values in `.env`:
 
 ## Run
 
+Check local configuration without generating or publishing:
+
+```bash
+python -m shortgen.cli doctor
+```
+
 Generate and publish one Reel:
 
 ```bash
@@ -126,6 +132,9 @@ Optional:
 - `15:30 UTC` (`21:00 IST`)
 
 It also supports manual runs with `workflow_dispatch`.
+
+Do not commit real API keys into this repository. Keep local credentials in `.env`
+and cloud credentials in GitHub repository secrets.
 
 Set these GitHub repository secrets:
 

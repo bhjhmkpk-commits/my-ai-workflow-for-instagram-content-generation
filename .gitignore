@@ -1,4 +1,5 @@
 .env
+.github/actions.env
 .venv/
 __pycache__/
 *.pyc

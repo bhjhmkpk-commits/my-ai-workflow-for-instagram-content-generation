@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import random
 import re
+import shutil
 
 from .config import load_settings
 from .pipeline import ShortGeneratorPipeline
@@ -32,6 +33,8 @@ def build_parser() -> argparse.ArgumentParser:
     run_batch.add_argument("--count", type=int, help="Number of posts to create.")
     run_batch.add_argument("--interval-seconds", type=int, help="Delay between posts.")
 
+    subparsers.add_parser("doctor", help="Check local configuration without generating or publishing.")
+
     return parser
 
 
@@ -43,12 +46,42 @@ def choose_topic(cli_topic: str | None, default_topics: list[str]) -> str:
     return re.sub(r"\s+", " ", random.choice(default_topics)).strip()
 
 
+def masked_setting_report(settings) -> dict:
+    required = {
+        "JSON2VIDEO_API_KEY": bool(settings.json2video_api_key),
+        "CLOUDINARY_URL": bool(settings.cloudinary_url),
+        "INSTAGRAM_ACCESS_TOKEN": bool(settings.instagram_access_token),
+        "INSTAGRAM_IG_USER_ID": bool(settings.instagram_ig_user_id),
+    }
+    optional = {
+        "GOOGLE_API_KEY": bool(settings.google_api_key),
+        "JSON2VIDEO_AUDIO_URL": bool(settings.json2video_audio_url),
+        "NVIDIA_TTS_API_KEY": bool(settings.nvidia_tts_api_key),
+    }
+    return {
+        "ready": all(required.values()) and shutil.which("ffmpeg") is not None,
+        "required": required,
+        "optional": optional,
+        "default_topics_count": len(settings.default_topics),
+        "output_dir": str(settings.output_dir),
+        "topic_history_file": str(settings.topic_history_file),
+        "ffmpeg_available": shutil.which("ffmpeg") is not None,
+        "auto_tts_disabled": settings.shortgen_disable_tts,
+        "daily_post_count": settings.daily_post_count,
+        "daily_post_interval_seconds": settings.daily_post_interval_seconds,
+    }
+
+
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
     settings = load_settings()
     settings.output_dir.mkdir(parents=True, exist_ok=True)
     pipeline = ShortGeneratorPipeline(settings)
+
+    if args.command == "doctor":
+        print(json.dumps(masked_setting_report(settings), indent=2))
+        return
 
     if args.command == "generate":
         topic = args.topic if args.topic else pipeline.generate_topics(1)[0]
